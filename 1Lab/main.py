@@ -14,10 +14,7 @@ def bisection_method(func, l, r, eps):
     fxm = f(xm)
     counter += 1
 
-    i = 0
-    while (1):
-        i += 1
-
+    for i in range(1, 100):
         # 2.
         x1 = l + L / 4
         x2 = r - L / 4
@@ -69,9 +66,8 @@ def golden_section_method(func, l, r, eps, tau):
     fx1 = f(x1)
     fx2 = f(x2)
     counter += 2
-    i = 0
-    while (1):
-        i += 1
+
+    for i in range(1, 100):
         # 2. Atmetamas [l, x1)
         if fx2 < fx1:
             l = x1
@@ -110,6 +106,35 @@ def findMin(fx1, fx2, x1, x2):
         print("f(x2) =", fx2)
         print("x2 =", x2)
 
+def newtons_method(func, x0, eps):
+    counter = 0
+
+    for i in range(1, 100):
+        xn = x0 - first_deriv(x0, func) / second_deriv(x0, func)
+        counter += 2
+        if abs(xn - x0) < eps:
+            break
+        x0 = xn
+
+    print("***********************")
+    print("Newton's method")
+    print("Number of iterations: %d" % i)
+    print("f(xn): %f" % f(xn, func))
+    print("xn: %f" % xn)
+    print("Number of functions calculated: %d" % counter)
+    print("***********************")
+
+def f(x, func):
+    return eval(func)
+
+def first_deriv(x, func):
+    h = 1e-5
+    return (f(x + h, func) - f(x, func)) / h
+
+def second_deriv(x, func):
+    h = 1e-5
+    return (first_deriv(x + h, func) - first_deriv(x, func)) / h
+
 def main():
     # function = "((x ** 2 - 3) ** 2) / 9 - 1"
     # l = 0
@@ -121,6 +146,8 @@ def main():
     bisection_method(function, l, r, eps)
     tau = 0.61803
     golden_section_method(function, l, r, eps, tau)
+    x0 = 5
+    newtons_method(function, x0, 0.0001)
 
 if __name__ == '__main__':
     main()
