@@ -47,7 +47,7 @@ def bisection_method(func, l, r, eps):
             r = x2
             L = r - l
 
-        bisection_method_points.append([l, r])
+        bisection_method_points.append(l + L/2)
 
         # 6.
         if L < eps:
@@ -94,7 +94,7 @@ def golden_section_method(func, l, r, eps, tau):
             fx1 = f(x1)
             counter += 1
 
-        golden_section_method_points.append([l, r])
+        golden_section_method_points.append(l + L/2)
 
         # 4.
         if L < eps:
@@ -148,7 +148,7 @@ def drawGraph(func, l, r, char):
 
     fig1 = plt.figure()
     ax = fig1.add_subplot(1, 1, 1)
-    ax.set(ylim=(-2, 5))
+    ax.set(ylim=(-1.2, 3.2))
     ax.spines['left'].set_position('zero')
     ax.spines['bottom'].set_position('zero')
     ax.spines['right'].set_color('none')
@@ -167,7 +167,7 @@ def drawGraph(func, l, r, char):
     plt.show()
 
 def drawPoints(point_array):
-    show = [1, 2, 3, 4, len(point_array)]
+    show = [2, 3, len(point_array)]
     for i in range(0, len(point_array)):
         r = random.random()
         b = random.random()
@@ -181,23 +181,21 @@ def drawPoints(point_array):
                 plt.scatter(point_array[i][1], 0, color=color)
                 plt.annotate(i + 1, (point_array[i][1], 0))
             else:
-                plt.scatter(newtons_method_points[i], 0, color=color)
-                plt.annotate(i + 1, (newtons_method_points[i], 0))
+                plt.scatter(point_array[i], 0, color=color)
+                plt.annotate(i + 1, (point_array[i], 0.09))
 
 def main():
+    #sqrt(3) atsakymas
     function = "((x ** 2 - 3) ** 2) / 9 - 1"
     l = 0
     r = 10
-    # function = "(100 - x) ** 2"
-    # l = 60
-    # r = 150
     eps = 0.0001
     bisection_method(function, l, r, eps)
     tau = 0.61803
     golden_section_method(function, l, r, eps, tau)
     x0 = 5
     newtons_method(function, x0, eps)
-    drawGraph(function, 0, 4, 'n')
+    drawGraph(function, -3, 3, 'n')
 
 if __name__ == '__main__':
     main()
