@@ -47,7 +47,7 @@ def bisection_method(func, l, r, eps):
             r = x2
             L = r - l
 
-        bisection_method_points.append(l + L/2)
+        bisection_method_points.append([l, l + L/2, r])
 
         # 6.
         if L < eps:
@@ -74,6 +74,8 @@ def golden_section_method(func, l, r, eps, tau):
     fx2 = f(x2)
     counter += 2
 
+    golden_section_method_points.append([x1, x2])
+
     for i in range(1, 100):
         # 2. Atmetamas [l, x1)
         if fx2 < fx1:
@@ -94,7 +96,7 @@ def golden_section_method(func, l, r, eps, tau):
             fx1 = f(x1)
             counter += 1
 
-        golden_section_method_points.append(l + L/2)
+        golden_section_method_points.append([x1, x2])
 
         # 4.
         if L < eps:
@@ -122,8 +124,8 @@ def newtons_method(func, x0, eps):
     print("***********************")
     print("Newton's method")
     print("Number of iterations: %d" % i)
-    print("f(Xmin): %f" % f(xn, func))
-    print("Xmin: %f" % xn)
+    print("f(Xmin):", f(xn, func))
+    print("Xmin:",  xn)
     print("Number of functions calculated: %d" % counter)
     print("***********************")
 
@@ -143,8 +145,11 @@ def drawGraph(func, l, r, char):
     y = eval(func)
 
     print("bisection: ", bisection_method_points)
+    getPointsWithF(bisection_method_points)
     print("golden: ", golden_section_method_points)
+    getPointsWithF(golden_section_method_points)
     print("newtons: ", newtons_method_points)
+    getPointsWithF(newtons_method_points)
 
     fig1 = plt.figure()
     ax = fig1.add_subplot(1, 1, 1)
@@ -166,8 +171,28 @@ def drawGraph(func, l, r, char):
     plt.plot(x, y, 'r')
     plt.show()
 
+def getPointsWithF(point_array):
+    def f(x):
+        return eval("((x ** 2 - 3) ** 2) / 9 - 1")
+
+    i = 1
+    if isinstance(point_array[0], list) and len(point_array[0]) == 3:
+        for array in point_array:
+            print("Iteracija:", i,". Xl:", array[0], ",Yl:", f(array[0]), ". Xm:", array[1], ",Ym:", f(array[1]), ". Xr:", array[2], ",Yr:", f(array[2]))
+            i+=1
+    elif isinstance(point_array[0], list) and len(point_array[0]) == 2:
+        for array in point_array:
+            print("Iteracija:", i,". Xl:", array[0], ",Yl:", f(array[0]), ". Xr:", array[1], ",Yr:", f(array[1]))
+            i+=1
+    else:
+        for point in point_array:
+            print("Iteracija:", i,". X:", point, ",Y:", f(point))
+            i += 1
+
+
+
 def drawPoints(point_array):
-    show = [2, 3, len(point_array)]
+    show = [3, 4, 5, 6, 7, len(point_array)]
     for i in range(0, len(point_array)):
         r = random.random()
         b = random.random()
@@ -177,13 +202,27 @@ def drawPoints(point_array):
         if i+1 in show:
             if isinstance(point_array[i], list):
                 plt.scatter(point_array[i][0], 0, color=color)
-                plt.annotate(i + 1, (point_array[i][0], 0))
+                a = getA(i)
+                plt.annotate(i + 1, (point_array[i][0], a))
                 plt.scatter(point_array[i][1], 0, color=color)
-                plt.annotate(i + 1, (point_array[i][1], 0))
+                plt.annotate(i + 1, (point_array[i][1], a))
+                plt.vlines(x=point_array[i][0], ymin=0, ymax=a, colors=color, ls='--', lw=1, label='vline_single - partial height')
+                plt.vlines(x=point_array[i][1], ymin=0, ymax=a, colors=color, ls='--', lw=1, label='vline_single - partial height')
             else:
                 plt.scatter(point_array[i], 0, color=color)
                 plt.annotate(i + 1, (point_array[i], 0.09))
 
+def getA(i):
+    if i == 3:
+        return 0.29
+    elif i == 4:
+        return 0.49
+    elif i == 5:
+        return 0.69
+    elif i == 6:
+        return 0.89
+    else:
+        return 0.09
 def main():
     #sqrt(3) atsakymas
     function = "((x ** 2 - 3) ** 2) / 9 - 1"
@@ -195,7 +234,7 @@ def main():
     golden_section_method(function, l, r, eps, tau)
     x0 = 5
     newtons_method(function, x0, eps)
-    drawGraph(function, -3, 3, 'n')
+    drawGraph(function, -0, 3, 'g')
 
 if __name__ == '__main__':
     main()
