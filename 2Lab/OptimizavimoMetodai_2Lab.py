@@ -1,4 +1,5 @@
 import itertools
+import math
 from math import sin
 from operator import itemgetter
 import random
@@ -16,43 +17,24 @@ def f(x1, x2):
 
 def plot2d(points, method):
     delta = 0.001
-    x = np.arange(-5, 5, delta)
-    y = np.arange(-5, 5, delta)
+    x = np.arange(0, 1, delta)
+    y = np.arange(0, 1, delta)
     X, Y = np.meshgrid(x, y)
     Z = -0.125 * X * Y * (1 - X - Y)
-    CS = ax.contour(X, Y, Z, 150, linewidths=0.3)
+    CS = ax.contour(X, Y, Z, 12, linewidths=0.3)
     ax.clabel(CS, inline=True, fontsize=9)
+    # plt.xlabel('x1')
+    # plt.ylabel('x2')
     rangeNeededSimplex = int(len(points) / 3)
-    if method == 'gd':
-        iterations = [17, 19, 20, 27, len(points) / 2 - 1]
+    if method == 'gd' or method == 'sd':
+        iterations = [0, 1]
         for i in range(0, len(points), 2):
-            if int(i / 2) in iterations:
+            if int(i / 2) in iterations or True:
                 if i == (len(points) - 2):
                     ax.plot(points[i], points[i + 1], marker='x')
                 else:
                     ax.plot(points[i], points[i + 1], marker='.')
-                plt.annotate(int(i / 2), (points[i], points[i + 1] + 0.003))
-    elif method == 'sd':
-        i = 0
-        while i < len(points):
-            if i + 1 < len(points):
-                ax.plot(points[i], points[i], marker='.')
-                ax.plot(points[i + 1], points[i + 1], marker='.')
-                plt.annotate(i + 1, (points[i] + 0.01, points[i] + 0.02))
-                plt.annotate(i + 1, (points[i + 1], points[i + 1]))
-
-                ax.plot(points[i+2], points[i+2], marker='.')
-                ax.plot(points[i + 3], points[i + 3], marker='.')
-                plt.annotate(i + 2, (points[i+2] + 0.01, points[i+2] + 0.02))
-                plt.annotate(i + 2, (points[i + 3], points[i + 3]))
-
-                i += 2
-            elif i + 1 == len(points):
-                ax.plot(points[i], points[i], marker='x')
-                ax.plot(points[i + 1], points[i + 1], marker='x')
-                plt.annotate(i + 1, (points[i] + 0.01, points[i] + 0.02))
-                plt.annotate(i + 1, (points[i + 1], points[i + 1]))
-                i += 2
+                plt.annotate(int(i / 2) + 1, (points[i], points[i + 1] + 0.003))
     elif method == 'simplex' and len(points) % 3 == 0:
         for i in range(0, len(points), 3):
             simp = [points[i], points[i + 1], points[i + 2]]
@@ -69,9 +51,9 @@ def plot2d(points, method):
                 # plt.annotate(i+1, (a[0], b[0]))
                 # plt.annotate(i+1, (a[1], b[1]))
                 # plt.annotate(i, (x, y))
-    #             plt.annotate(i + 1, (points[i][0], points[i][1]))
-    #             plt.annotate(i + 1, (points[i+1][0], points[i + 1][1]))
-    #             plt.annotate(i + 1, (points[i+2][0], points[i + 2][1]))
+                # plt.annotate(i + 1, (points[i][0], points[i][1]))
+                # plt.annotate(i + 1, (points[i+1][0], points[i + 1][1]))
+                # plt.annotate(i + 1, (points[i+2][0], points[i + 2][1]))
     plt.draw()
     plt.show()
 
@@ -95,7 +77,7 @@ def gradient_descent(func, args, X0, gama, epsilon):
     points = []
     counter = 0
 
-    max_iterations = 1000
+    max_iterations = 100
     while i < max_iterations:
         gradMod = 0
         Xtemp = list(Xi)
@@ -112,8 +94,6 @@ def gradient_descent(func, args, X0, gama, epsilon):
             print("i: ", i, "[", Xi[0], ",", Xi[1], "]")
             print("Counter: ", counter)
             print("f(X) = ", f(Xi[0], Xi[1]))
-            points.append(Xi[0])
-            points.append(Xi[1])
             break
         i += 1
     plot2d(points, 'gd')
@@ -134,37 +114,73 @@ def newtons_method(func, x0, eps):
         x0 = xn
     return x0, counter
 
+def golden_section_method(left, right, func, epsilon):
+    tau = (-1 + math.sqrt(5)) / 2
+    length = right - left
+    x1 = right - tau * length
+    x2 = left + tau * length
+    steps = 1
+    def f(x):
+        return eval(str(func))
+
+    fx1 = f(x1)
+    fx2 = f(x2)
+    counter = 2
+    while length >= epsilon:
+        steps = steps + 1
+        if fx2 < fx1:
+            left = x1
+            length = right - left
+            x1 = x2
+            fx1 = fx2
+            x2 = left + tau * length
+            fx2 = f(x2)
+            counter += 1
+        else:
+            right = x2
+            length = right - left
+            x2 = x1
+            fx2 = fx1
+            x1 = right - tau * length
+            fx1 = f(x1)
+            counter += 1
+
+        min_reiksme = min([fx1, fx2])
+        sprendinys = x1
+        if min_reiksme == fx2:
+            sprendinys = x2
+    return sprendinys, counter
 
 def steepest_descent(func, args, X0, epsilon):
     i = 1
     Xi = X0
 
     grad = getGrad(func, args)
-    points = [Xi[0], Xi[1]]
+    points = []
     counter = 0
 
-    max_iterations = 1000
+    max_iterations = 500
     while i < max_iterations:
         gradMod = 0
         Xtemp = list(Xi)
-        print("i: ", i, "[", Xi[0], ",", Xi[1], "]")
         for j in range(0, len(Xi)):
             gradFunc = gradientFunction(str(grad[j]), Xtemp[0], Xtemp[1])
-            gamaFunc = func
             gama = Symbol('x')
             for k in range(0, len(Xtemp)):
-                gamaFunc = gamaFunc.subs(args[k], (Xtemp[k] - gama * gradFunc))
+                func = func.subs(args[k], (Xtemp[k] - gama * gradFunc))
 
-            gama_min, n_count = newtons_method(gamaFunc, abs(sum(Xtemp) / len(Xtemp)), epsilon)
+            gama_min, n_count = newtons_method(func, abs(sum(Xtemp) / len(Xtemp)), epsilon)
+            # gama_min, n_count = golden_section_method(0, 5, func, epsilon)
             counter += n_count
 
             Xi[j] = Xi[j] - gama_min * gradFunc
-            print(i, "gamma", gama_min)
             counter += 1
             gradMod += gradFunc
         gradMod = abs(gradMod) / len(Xi)
         points.append(Xi[0])
         points.append(Xi[1])
+        print("i: ", i, "Xi[0]:", Xi[0], ". Xi[1]:", Xi[1], ". f(Xi) =", f(Xi[0], Xi[1]))
+        print(i, "gamma", gama_min)
         if gradMod < epsilon:
             print("i: ", i, "[", Xi[0], ",", Xi[1], "]")
             print("Counter: ", counter)
@@ -177,17 +193,30 @@ def steepest_descent(func, args, X0, epsilon):
 def getPoint(arg, value):
     return {"arg": arg, "value": value}
 
+def generate_simplex_method_points(x0, alpha):
+    n = 2
+    delta1 = (math.sqrt(n + 1) + n - 1) / (n * math.sqrt(2)) * alpha
+    delta2 = (math.sqrt(n + 1) - 1) / (n * math.sqrt(2)) * alpha
 
-def simplex_method(args, X0, epsilon=0.0000001, alpha=0.5, beta=0.5, gama=3, ro=0.5):
+    x1 = [x0[0] + delta2, x0[0] + delta1]
+    x2 = [x0[0] + delta1, x0[0] + delta2]
+    return x1, x2
+
+def simplex_method(args, X0, epsilon=0.0000001, alpha=0.5, beta=0.5, gama=3, ro=-0.5):
     simplex = [getPoint(X0, f(X0[0], X0[1]))]
-    max_iterations = 2000
+    max_iterations = 500
     counter = 0
     points = []
 
-    for i in range(0, len(args)):
-        argList = list(X0)
-        argList[i] += alpha
-        simplex.append(getPoint(argList, f(argList[0], argList[1])))
+    # for i in range(0, len(args)):
+    #     argList = list(X0)
+    #     argList[i] += alpha
+    #     simplex.append(getPoint(argList, f(argList[0], argList[1])))
+
+    # Geresnis:
+    X1, X2 = generate_simplex_method_points(X0, alpha)
+    simplex.append(getPoint(X1, f(X1[0], X1[1])))
+    simplex.append(getPoint(X2, f(X2[0], X2[1])))
 
     for i in range(0, max_iterations):
         # 1. Sort
@@ -261,26 +290,24 @@ def main():
     x2 = Symbol('x2')
     F = -0.125 * x1 * x2 * (1 - x1 - x2)
 
-    grad = getGrad(F, [x1, x2])
-
     plot2d([], 'a')
 
-    print("Tikslo ir gradiento funkciju reiksmes (0, 0)", f(0, 0), gradientFunction(str(grad), 0, 0))
-    print("Tikslo ir gradiento funkciju reiksmes (1, 1)", f(1, 1), gradientFunction(str(grad), 1, 1))
-    print("Tikslo ir gradiento funkciju reiksmes (0.3, 0.9)", f(0.3, 0.9), gradientFunction(str(grad), 0.3, 0.9))
+    # grad = getGrad(F, [x1, x2])
+    # print("Tikslo ir gradiento funkciju reiksmes (0, 0)", f(0, 0), gradientFunction(str(grad), 0, 0))
+    # print("Tikslo ir gradiento funkciju reiksmes (1, 1)", f(1, 1), gradientFunction(str(grad), 1, 1))
+    # print("Tikslo ir gradiento funkciju reiksmes (0.3, 0.9)", f(0.3, 0.9), gradientFunction(str(grad), 0.3, 0.9))
 
     # gradient_descent(F, [x1, x2], [0, 0], 0.1, 0.001)
-    # gradient_descent(F, [x1, x2], [1, 1], 3, 0.00001)
-    # gradient_descent(F, [x1, x2], [0.3, 0.9], 3, 0.000001)
-
+    # gradient_descent(F, [x1, x2], [1, 1], 3, 0.001)
+    # gradient_descent(F, [x1, x2], [0.3, 0.9], 3, 0.00001)
 
     # steepest_descent(F, [x1, x2], [0, 0], 0.001)
-    # steepest_descent(F, [x1, x2], [0.1, 0.1], 0.001)
-    # steepest_descent(F, [x1, x2], [0.4, 0.9], 0.001)
+    # steepest_descent(F, [x1, x2], [1, 1], 0.001)
+    # steepest_descent(F, [x1, x2], [0.3, 0.9], 0.001)
 
     # simplex_method([x1, x2], [0, 0])
     # simplex_method([x1, x2], [1, 1])
-    # simplex_method([x1, x2], [0.4, 0.9])
+    # simplex_method([x1, x2], [0.3, 0.9])
 
 
 if __name__ == "__main__":
