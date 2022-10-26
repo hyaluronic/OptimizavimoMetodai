@@ -12,21 +12,30 @@ fig, ax = plt.subplots()
 
 
 def f(x1, x2):
-    return -1 * (0.125 * x1 * x2 * (1 - x1 - x2))
+    return gradientFunction(str(F), x1, x2)
 
 
 def plot2d(points, method):
     delta = 0.001
-    x = np.arange(0, 1, delta)
-    y = np.arange(0, 1, delta)
+    x = np.arange(0.05, 0.4, delta)
+    y = np.arange(0.3, 0.95, delta)
     X, Y = np.meshgrid(x, y)
     Z = -0.125 * X * Y * (1 - X - Y)
-    CS = ax.contour(X, Y, Z, 12, linewidths=0.3)
+    CS = ax.contour(X, Y, Z, 50, linewidths=0.3)
     ax.clabel(CS, inline=True, fontsize=9)
     # plt.xlabel('x1')
     # plt.ylabel('x2')
     rangeNeededSimplex = int(len(points) / 3)
-    if method == 'gd' or method == 'sd':
+    if method == 'gd':
+        iterations = [0, 1]
+        for i in range(0, len(points), 2):
+            if int(i / 2) in iterations or True:
+                if i == (len(points) - 2):
+                    ax.plot(points[i], points[i + 1], marker='x')
+                else:
+                    ax.plot(points[i], points[i + 1], marker='.')
+                plt.annotate(int(i / 2) + 1, (points[i], points[i + 1] + 0.003))
+    elif method == 'sd':
         iterations = [0, 1]
         for i in range(0, len(points), 2):
             if int(i / 2) in iterations or True:
@@ -98,30 +107,17 @@ def gradient_descent(func, args, X0, gama, epsilon):
         i += 1
     plot2d(points, 'gd')
 
+def golden_section_method(left, right, xi, grad, func, epsilon):
+    f = lambda alpha: fPoint(xi - alpha * grad)
 
-def newtons_method(func, x0, eps):
-    diff1 = func.diff('x')
-    diff2 = diff1.diff('x')
-    counter = 0
+    def fPoint(point):
+        return gradientFunction(str(func), point[0], point[1])
 
-    for i in range(1, 1000):
-        if abs(x0) < eps:
-            break
-        xn = x0 - (diff1.subs('x', x0) / diff2.subs('x', x0))
-        counter += 3
-        if abs(xn - x0) < eps:
-            break
-        x0 = xn
-    return x0, counter
-
-def golden_section_method(left, right, func, epsilon):
     tau = (-1 + math.sqrt(5)) / 2
     length = right - left
     x1 = right - tau * length
     x2 = left + tau * length
     steps = 1
-    def f(x):
-        return eval(str(func))
 
     fx1 = f(x1)
     fx2 = f(x2)
@@ -151,41 +147,32 @@ def golden_section_method(left, right, func, epsilon):
             sprendinys = x2
     return sprendinys, counter
 
-def steepest_descent(func, args, X0, epsilon):
-    i = 1
-    Xi = X0
+def steepest_descent(func, args, Xi, epsilon):
+    Xi = np.array(Xi)
 
     grad = getGrad(func, args)
-    points = []
-    counter = 0
+    points = [Xi[0], Xi[1]]
 
+    counter = 0
+    i = 1
     max_iterations = 500
     while i < max_iterations:
-        gradMod = 0
-        Xtemp = list(Xi)
-        for j in range(0, len(Xi)):
-            gradFunc = gradientFunction(str(grad[j]), Xtemp[0], Xtemp[1])
-            gama = Symbol('x')
-            for k in range(0, len(Xtemp)):
-                func = func.subs(args[k], (Xtemp[k] - gama * gradFunc))
-
-            gama_min, n_count = newtons_method(func, abs(sum(Xtemp) / len(Xtemp)), epsilon)
-            # gama_min, n_count = golden_section_method(0, 5, func, epsilon)
-            counter += n_count
-
-            Xi[j] = Xi[j] - gama_min * gradFunc
-            counter += 1
-            gradMod += gradFunc
-        gradMod = abs(gradMod) / len(Xi)
-        points.append(Xi[0])
-        points.append(Xi[1])
-        print("i: ", i, "Xi[0]:", Xi[0], ". Xi[1]:", Xi[1], ". f(Xi) =", f(Xi[0], Xi[1]))
-        print(i, "gamma", gama_min)
+        gradValue = np.array(gradientFunction(str(grad), Xi[0], Xi[1]))
+        counter += 2
+        gradMod = math.sqrt(gradValue[0] * gradValue[0] + gradValue[1] * gradValue[1])
         if gradMod < epsilon:
-            print("i: ", i, "[", Xi[0], ",", Xi[1], "]")
+            print("i: ", i - 1, "[", Xi[0], ",", Xi[1], "]")
             print("Counter: ", counter)
             print("f(X) = ", f(Xi[0], Xi[1]))
             break
+
+        gama_min, n_count = golden_section_method(0, 15, Xi, gradValue, func, epsilon)
+        counter += n_count
+
+        Xi = Xi - gama_min * gradValue
+        points.append(Xi[0])
+        points.append(Xi[1])
+        print("i: ", i, "gamma", gama_min, "Xi[0]:", Xi[0], ". Xi[1]:", Xi[1], ". f(Xi) =", f(Xi[0], Xi[1]))
         i += 1
     plot2d(points, 'sd')
 
@@ -285,25 +272,25 @@ def simplex_method(args, X0, epsilon=0.0000001, alpha=0.5, beta=0.5, gama=3, ro=
     print("Counter: ", counter)
 
 
+x1 = Symbol('x1')
+x2 = Symbol('x2')
+F = -0.125 * x1 * x2 * (1 - x1 - x2)
 def main():
-    x1 = Symbol('x1')
-    x2 = Symbol('x2')
-    F = -0.125 * x1 * x2 * (1 - x1 - x2)
 
-    plot2d([], 'a')
-
-    # grad = getGrad(F, [x1, x2])
+    # plot2d([], 'a')
+    #
+    grad = getGrad(F, [x1, x2])
     # print("Tikslo ir gradiento funkciju reiksmes (0, 0)", f(0, 0), gradientFunction(str(grad), 0, 0))
     # print("Tikslo ir gradiento funkciju reiksmes (1, 1)", f(1, 1), gradientFunction(str(grad), 1, 1))
-    # print("Tikslo ir gradiento funkciju reiksmes (0.3, 0.9)", f(0.3, 0.9), gradientFunction(str(grad), 0.3, 0.9))
+    print("Tikslo ir gradiento funkciju reiksmes (0.3, 0.9)", f(0.3, 0.9), gradientFunction(str(grad), 0.3, 0.9))
 
     # gradient_descent(F, [x1, x2], [0, 0], 0.1, 0.001)
-    # gradient_descent(F, [x1, x2], [1, 1], 3, 0.001)
-    # gradient_descent(F, [x1, x2], [0.3, 0.9], 3, 0.00001)
+    # gradient_descent(F, [x1, x2], [1, 1], 3.6, 0.001)
+    # gradient_descent(F, [x1, x2], [0.3, 0.9], 3.4, 0.0001)
 
     # steepest_descent(F, [x1, x2], [0, 0], 0.001)
     # steepest_descent(F, [x1, x2], [1, 1], 0.001)
-    # steepest_descent(F, [x1, x2], [0.3, 0.9], 0.001)
+    steepest_descent(F, [x1, x2], [0.3, 0.9], 0.001)
 
     # simplex_method([x1, x2], [0, 0])
     # simplex_method([x1, x2], [1, 1])
