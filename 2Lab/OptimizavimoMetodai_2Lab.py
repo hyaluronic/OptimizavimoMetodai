@@ -17,28 +17,19 @@ def f(x1, x2):
 
 def plot2d(points, method):
     delta = 0.001
-    x = np.arange(0.05, 0.4, delta)
-    y = np.arange(0.3, 0.95, delta)
+    x = np.arange(0.15, 0.35, delta)
+    y = np.arange(0.30, 0.5, delta)
     X, Y = np.meshgrid(x, y)
     Z = -0.125 * X * Y * (1 - X - Y)
-    CS = ax.contour(X, Y, Z, 50, linewidths=0.3)
+    CS = ax.contour(X, Y, Z, 15, linewidths=0.3)
     ax.clabel(CS, inline=True, fontsize=9)
     # plt.xlabel('x1')
     # plt.ylabel('x2')
     rangeNeededSimplex = int(len(points) / 3)
-    if method == 'gd':
-        iterations = [0, 1]
+    if method == 'gd' or method == 'sd':
+        iterations = [2, 3, 4, 5, 6]
         for i in range(0, len(points), 2):
-            if int(i / 2) in iterations or True:
-                if i == (len(points) - 2):
-                    ax.plot(points[i], points[i + 1], marker='x')
-                else:
-                    ax.plot(points[i], points[i + 1], marker='.')
-                plt.annotate(int(i / 2) + 1, (points[i], points[i + 1] + 0.003))
-    elif method == 'sd':
-        iterations = [0, 1]
-        for i in range(0, len(points), 2):
-            if int(i / 2) in iterations or True:
+            if int(i / 2) in iterations:
                 if i == (len(points) - 2):
                     ax.plot(points[i], points[i + 1], marker='x')
                 else:
@@ -151,7 +142,8 @@ def steepest_descent(func, args, Xi, epsilon):
     Xi = np.array(Xi)
 
     grad = getGrad(func, args)
-    points = [Xi[0], Xi[1]]
+    points = []
+    # points = [Xi[0], Xi[1]]
 
     counter = 0
     i = 1
@@ -166,7 +158,7 @@ def steepest_descent(func, args, Xi, epsilon):
             print("f(X) = ", f(Xi[0], Xi[1]))
             break
 
-        gama_min, n_count = golden_section_method(0, 15, Xi, gradValue, func, epsilon)
+        gama_min, n_count = golden_section_method(0, 17, Xi, gradValue, func, epsilon)
         counter += n_count
 
         Xi = Xi - gama_min * gradValue
@@ -279,10 +271,10 @@ def main():
 
     # plot2d([], 'a')
     #
-    grad = getGrad(F, [x1, x2])
+    # grad = getGrad(F, [x1, x2])
     # print("Tikslo ir gradiento funkciju reiksmes (0, 0)", f(0, 0), gradientFunction(str(grad), 0, 0))
     # print("Tikslo ir gradiento funkciju reiksmes (1, 1)", f(1, 1), gradientFunction(str(grad), 1, 1))
-    print("Tikslo ir gradiento funkciju reiksmes (0.3, 0.9)", f(0.3, 0.9), gradientFunction(str(grad), 0.3, 0.9))
+    # print("Tikslo ir gradiento funkciju reiksmes (0.3, 0.9)", f(0.3, 0.9), gradientFunction(str(grad), 0.3, 0.9))
 
     # gradient_descent(F, [x1, x2], [0, 0], 0.1, 0.001)
     # gradient_descent(F, [x1, x2], [1, 1], 3.6, 0.001)
