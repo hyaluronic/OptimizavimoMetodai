@@ -177,7 +177,7 @@ def generate_simplex_method_points(x0, alpha):
     x2 = [x0[0] + delta1, x0[0] + delta2]
     return x1, x2
 
-def simplex_method(args, X0, epsilon=0.001, alpha=0.5, gama=3, beta=0.2, niu=-0.7):
+def simplex_method(args, X0, epsilon=0.001, alpha=0.5, gama=3, beta=0.5, niu=-0.5):
     simplex = [getPoint(X0, f(X0[0], X0[1]))]
     max_iterations = 100
     counter = 1
