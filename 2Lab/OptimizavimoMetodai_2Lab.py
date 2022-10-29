@@ -14,19 +14,18 @@ fig, ax = plt.subplots()
 def f(x1, x2):
     return gradientFunction(str(F), x1, x2)
 
-
 def plot2d(points, method):
+    plot2d(points, [], method)
+
+def plot2d(points, pointsForNumbers, method):
     delta = 0.001
-    x = np.arange(0.15, 0.35, delta)
-    y = np.arange(0.30, 0.5, delta)
-    X, Y = np.meshgrid(x, y)
-    Z = -0.125 * X * Y * (1 - X - Y)
-    CS = ax.contour(X, Y, Z, 15, linewidths=0.3)
-    ax.clabel(CS, inline=True, fontsize=9)
-    # plt.xlabel('x1')
-    # plt.ylabel('x2')
-    rangeNeededSimplex = int(len(points) / 3)
     if method == 'gd' or method == 'sd':
+        x = np.arange(0.15, 0.35, delta)
+        y = np.arange(0.30, 0.5, delta)
+        X, Y = np.meshgrid(x, y)
+        Z = -0.125 * X * Y * (1 - X - Y)
+        CS = ax.contour(X, Y, Z, 15, linewidths=0.3)
+        ax.clabel(CS, inline=True, fontsize=9)
         iterations = [2, 3, 4, 5, 6]
         for i in range(0, len(points), 2):
             if int(i / 2) in iterations:
@@ -36,7 +35,7 @@ def plot2d(points, method):
                     ax.plot(points[i], points[i + 1], marker='.')
                 plt.annotate(int(i / 2) + 1, (points[i], points[i + 1] + 0.003))
     elif method == 'simplex' and len(points) % 3 == 0:
-        for i in range(0, len(points), 3):
+        for i in range(0, min(5*3, len(points)), 3):
             simp = [points[i], points[i + 1], points[i + 2]]
             r = random.random()
             b = random.random()
@@ -48,12 +47,8 @@ def plot2d(points, method):
                 y = np.linspace(a[1], b[1], 100)
 
                 ax.plot(x, y, color=color)
-                # plt.annotate(i+1, (a[0], b[0]))
-                # plt.annotate(i+1, (a[1], b[1]))
-                # plt.annotate(i, (x, y))
-                # plt.annotate(i + 1, (points[i][0], points[i][1]))
-                # plt.annotate(i + 1, (points[i+1][0], points[i + 1][1]))
-                # plt.annotate(i + 1, (points[i+2][0], points[i + 2][1]))
+        for i in range(0, min(7, len(pointsForNumbers))):
+            plt.annotate(i + 1, (pointsForNumbers[i][0], pointsForNumbers[i][1] + 0.009), fontsize=15)
     plt.draw()
     plt.show()
 
@@ -168,7 +163,8 @@ def steepest_descent(func, args, Xi, epsilon):
         i += 1
     plot2d(points, 'sd')
 
-
+def getModVector(x):
+    return math.sqrt(x[0] * x[0] + x[1] * x[1])
 def getPoint(arg, value):
     return {"arg": arg, "value": value}
 
@@ -181,33 +177,43 @@ def generate_simplex_method_points(x0, alpha):
     x2 = [x0[0] + delta1, x0[0] + delta2]
     return x1, x2
 
-def simplex_method(args, X0, epsilon=0.0000001, alpha=0.5, beta=0.5, gama=3, ro=-0.5):
+def simplex_method(args, X0, epsilon=0.001, alpha=0.5, gama=3, beta=0.2, niu=-0.7):
     simplex = [getPoint(X0, f(X0[0], X0[1]))]
-    max_iterations = 500
-    counter = 0
+    max_iterations = 100
+    counter = 1
     points = []
+    pointsForNumbers = [X0]
 
-    # for i in range(0, len(args)):
-    #     argList = list(X0)
-    #     argList[i] += alpha
-    #     simplex.append(getPoint(argList, f(argList[0], argList[1])))
+    for i in range(0, len(args)):
+        argList = list(X0)
+        argList[i] -= alpha
+        simplex.append(getPoint(argList, f(argList[0], argList[1])))
+        counter += 1
 
     # Geresnis:
-    X1, X2 = generate_simplex_method_points(X0, alpha)
-    simplex.append(getPoint(X1, f(X1[0], X1[1])))
-    simplex.append(getPoint(X2, f(X2[0], X2[1])))
+    # X1, X2 = generate_simplex_method_points(X0, alpha)
+    # simplex.append(getPoint(X1, f(X1[0], X1[1])))
+    # counter += 1
+    # simplex.append(getPoint(X2, f(X2[0], X2[1])))
+    # counter += 1
+
+    pointsForNumbers.append(simplex[-2]['arg'])
 
     for i in range(0, max_iterations):
+        pointsForNumbers.append(simplex[-1]['arg'])
         # 1. Sort
         simplex.sort(key=itemgetter('value'))
 
-        print("i: ", i + 1, simplex[0]['arg'])
+        print("i: ", i + 1)
+        print("     [0]: ("+str(simplex[0]['arg'][0])+", "+str(simplex[0]['arg'][1])+")", ". f:", simplex[0]['value'])
+        # print("     [1]:", simplex[1]['arg'], ". f:", simplex[1]['value'])
+        # print("     [2]:", simplex[2]['arg'], ". f:", simplex[2]['value'])
 
         # if i < 6:
         points.extend([tuple(sim['arg'] + [sim['value']]) for sim in simplex])
 
         # 6. Check convergence
-        if abs(simplex[0]['value'] - simplex[-1]['value']) < epsilon:
+        if getModVector(np.array((simplex[0]['arg']) - np.array(simplex[-1]['arg']))) < epsilon:
             break
 
         centroid = [0] * len(args)
@@ -242,7 +248,7 @@ def simplex_method(args, X0, epsilon=0.0000001, alpha=0.5, beta=0.5, gama=3, ro=
         # 4. Contract
         contraction = [0] * len(args)
         for j in range(0, len(args)):
-            contraction[j] = centroid[j] + ro * (simplex[-1]['arg'][j] - centroid[j])
+            contraction[j] = centroid[j] + niu * (simplex[-1]['arg'][j] - centroid[j])
         contraction_value = f(contraction[0], contraction[1])
         counter += 1
         if contraction_value < simplex[-1]['value']:
@@ -250,15 +256,16 @@ def simplex_method(args, X0, epsilon=0.0000001, alpha=0.5, beta=0.5, gama=3, ro=
             continue
 
         # 5. Reduce
-        reduce = [0] * len(args)
         for j in range(1, len(simplex)):
+            reduce = [0] * len(args)
             for k in range(0, len(args)):
                 reduce[k] = simplex[0]['arg'][k] + beta * (simplex[j]['arg'][k] - simplex[0]['arg'][k])
             reduce_value = f(reduce[0], reduce[1])
             counter += 1
             simplex[j] = getPoint(reduce, reduce_value)
+        pointsForNumbers.append(simplex[-2]['arg'])
 
-    plot2d(points, 'simplex')
+    plot2d(points, pointsForNumbers, 'simplex')
     print("i: ", i + 1, simplex[0]['arg'])
     print("f(X) = ", f(simplex[0]['arg'][0], simplex[0]['arg'][1]))
     print("Counter: ", counter)
@@ -282,11 +289,11 @@ def main():
 
     # steepest_descent(F, [x1, x2], [0, 0], 0.001)
     # steepest_descent(F, [x1, x2], [1, 1], 0.001)
-    steepest_descent(F, [x1, x2], [0.3, 0.9], 0.001)
+    # steepest_descent(F, [x1, x2], [0.3, 0.9], 0.001)
 
     # simplex_method([x1, x2], [0, 0])
     # simplex_method([x1, x2], [1, 1])
-    # simplex_method([x1, x2], [0.3, 0.9])
+    simplex_method([x1, x2], [0.3, 0.9])
 
 
 if __name__ == "__main__":
