@@ -11,9 +11,9 @@ def getModVector(x):
     return math.sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2])
 
 
-def simplex_method(func, args, epsilon=0.001, alpha=0.5, gama=3, beta=0.5, niu=-0.5):
+def simplex_method(func, args, epsilon=0.001, alpha=0.5, gama=3, beta=0.5, niu=0.5):
     simplex = [getPoint(args, func(args))]
-    max_iterations = 500
+    max_iterations = 1000
     counter = 1
 
     for i in range(0, len(args)):
@@ -81,7 +81,8 @@ def simplex_method(func, args, epsilon=0.001, alpha=0.5, gama=3, beta=0.5, niu=-
     return simplex[0]['arg'], counter
 
 
-def optimization(func, constraints, args, epsilon):
+def optimization(func, constraints, args, epsilon, penaltyQuantifier=1, rdiv=0.5):
+    penaltyQuantifier = penaltyQuantifier / rdiv
     equals = []
     inequals = []
 
@@ -91,26 +92,25 @@ def optimization(func, constraints, args, epsilon):
         elif con.get("type") == "ineq":
             inequals.append(con.get("func"))
 
-    penaltyFunction = lambda x: sum((abs(eq(x)) ** 2) for eq in equals) + sum(
-        (abs(max(0, iq(x))) ** 2) for iq in inequals)
+    penaltyFunction = lambda x: sum(eq(x) ** 2 for eq in equals) + sum(
+        max(0, iq(x)) ** 2 for iq in inequals)
 
-    r = lambda x: x * 0.5
+    r = lambda x: x * rdiv
 
-    penaltyQuantifier = 1
     bfunc = lambda x: func(x) + 1 / r(penaltyQuantifier) * penaltyFunction(x)
 
     counter = 0
     maxIterations = 100
     for i in range(1, maxIterations):
-        print("r: ", r(penaltyQuantifier))
-        print("Baudos funkcija:", bfunc(args))
-        print("X:", args)
-        print("F(X): ", func(args))
-        print('*************')
-
         newargs, c = simplex_method(bfunc, args, epsilon)
         counter += c
 
+        print(i)
+        print("r: ", r(penaltyQuantifier))
+        print("Baudos funkcija:", bfunc(newargs))
+        print("X:", "(" + str(newargs[0]) + ", " + str(newargs[1]) + ", " + str(newargs[2]) + ")")
+        print("F(X): ", func(newargs))
+        print('*************')
         if getModVector(np.array(newargs) - np.array(args)) < epsilon:
             break
         else:
@@ -122,14 +122,14 @@ def optimization(func, constraints, args, epsilon):
 
 
 def main():
-    # Budas 1: kai funkcija yra Spav, o g yra plotas - 1
-    func = lambda x: -1 * (2 * x[0] * x[1] + 2 * x[0] * x[2] + 2 * x[2] * x[1])
+    # funkcija yra Turis, gi yra (pavirsiaus plotas - 1)
+    func = lambda x: -1 * x[0] * x[1] * x[2]
 
-    g1 = lambda x: x[0] + x[1] + x[2] - 1
+    g1 = lambda x: 2 * (x[0] * x[1] + x[0] * x[2] + x[1] * x[2]) - 1
 
-    h1 = lambda x: x[0] - 1
-    h2 = lambda x: x[1] - 1
-    h3 = lambda x: x[2] - 1
+    h1 = lambda x: -x[0]
+    h2 = lambda x: -x[1]
+    h3 = lambda x: -x[2]
 
     constraints = (
         {"type": "eq", "func": g1},
@@ -139,11 +139,11 @@ def main():
 
     # print("Funkcija taske 0,0,0:", func([0, 0, 0]))
     # print("Funkcija taske 1,1,1:", func([1, 1, 1]))
-    # print("Funkcija taske 0.9,0.3,0.9:", func([0.9, 0.3, 0.9]))
+    # print("Funkcija taske 0,0.3,0.9:", func([0, 0.3, 0.9]))
     #
     # print("g(X) taske 0,0,0:", g1([0, 0, 0]))
     # print("g(X) taske 1, 1, 1:", g1([1, 1, 1]))
-    # print("g(X) taske 0.9,0.3,0.9:", g1([0.9, 0.3, 0.9]))
+    # print("g(X) taske 0,0.3,0.9:", g1([0, 0.3, 0.9]))
     #
     # print("h1(X) taske 0,0,0:", h1([0, 0, 0]))
     # print("h2(X) taske 0,0,0:", h2([0, 0, 0]))
@@ -153,14 +153,13 @@ def main():
     # print("h2(X) taske 1,1,1:", h2([1, 1, 1]))
     # print("h3(X) taske 1,1,1:", h3([1, 1, 1]))
     #
-    # print("h1(X) taske 0.9,0.3,0.9:", h1([0.9, 0.3, 0.9]))
-    # print("h2(X) taske 0.9,0.3,0.9:", h2([0.9, 0.3, 0.9]))
-    # print("h3(X) taske 0.9,0.3,0.9:", h3([0.9, 0.3, 0.9]))
+    # print("h1(X) taske 0,0.3,0.9:", h1([0, 0.3, 0.9]))
+    # print("h2(X) taske 0,0.3,0.9:", h2([0, 0.3, 0.9]))
+    # print("h3(X) taske 0,0.3,0.9:", h3([0, 0.3, 0.9]))
 
-    optimization(func, constraints, [0, 0, 0], 0.001)
-    # optimization(func, constraints, [1, 1, 1], 0.001)
-    # optimization(func, constraints, [0.9, 0.3, 0.9], 0.001)
-
+    # optimization(func, constraints, [0, 0, 0], 0.0001, penaltyQuantifier=4, rdiv=0.5)
+    # optimization(func, constraints, [1, 1, 1], 0.0001, penaltyQuantifier=4, rdiv=0.5)
+    optimization(func, constraints, [0, 0.3, 0.9], 0.0001, penaltyQuantifier=4, rdiv=0.5)
 
 if __name__ == "__main__":
     main()
