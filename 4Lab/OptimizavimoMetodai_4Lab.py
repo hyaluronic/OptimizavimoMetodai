@@ -70,7 +70,7 @@ class LinearModel:
     def getTableau(self):
         # construct starting tableau
 
-        if self.minmax == "MIN" and self.transform == False:
+        if self.minmax == "MIN" and self.transform is False:
             self.c[0:len(self.c)] = -1 * self.c[0:len(self.c)]
             self.transform = True
 
@@ -92,9 +92,7 @@ class LinearModel:
 
         t2 = np.hstack((np.transpose([basis]), np.transpose([self.b]), A))
 
-        tableau = np.vstack((t1, t2))
-
-        tableau = np.array(tableau, dtype='float')
+        tableau = np.array(np.vstack((t1, t2)), dtype='float')
 
         return tableau
 
@@ -163,7 +161,7 @@ class LinearModel:
                     mult = tableau[i, n] / tableau[r, n]
                     tableau[i, 1:] = tableau[i, 1:] - mult * tableau[r, 1:]
 
-                    # new basic variable
+            # new basic variable
             tableau[r, 0] = n - 2
 
             iter += 1
@@ -198,7 +196,7 @@ def main():
     # A = np.array([[-1, 1, -1, -1],
     #               [2, 4, 0, 0],
     #               [0, 0, 1, 1]])
-    # b = np.array([0, 4, 9])
+    # b = np.array([0, 3, 9])
     # c = np.array([2, -3, 0, -5])
 
     model1.addA(A)
@@ -214,6 +212,7 @@ def main():
     print("\n")
     model1.printSoln()
 
+#TODO: Užrašykite duotą uždavinį matriciniu pavidalu standartine forma.
 
 if __name__ == "__main__":
     main()
