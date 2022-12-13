@@ -213,7 +213,5 @@ def main():
     print("\n")
     model1.printSoln()
 
-#TODO: Užrašykite duotą uždavinį matriciniu pavidalu standartine forma.
-
 if __name__ == "__main__":
     main()
