@@ -35,15 +35,16 @@ class LinearModel:
 
     def printSoln(self):
         print("Optimal solution: ")
-        print(self.x)
+        print('(' + ''.join(str(x) + ', ' if i + 1 != len(self.x) else str(x) + ')' for i, x in enumerate(self.x)))
         print("Base:")
-        print("[", end="")
-        for i in range(0, len(self.x)):
-            if self.x[i] != 0 and i + 1 != len(self.x):
-                print(i + 1, end=", ")
-            elif self.x[i] != 0 and i != len(self.x):
-                print(i + 1, end="")
-        print("]")
+        print("{", end="")
+        X = [i + 1 for i, x in enumerate(self.x) if x != 0]
+        for i in range(0, len(X)):
+            if i + 1 != len(X):
+                print(X[i], end=", ")
+            elif i != len(X):
+                print(X[i], end="")
+        print("}")
         print("Optimal value: ")
         print(self.optimalValue)
 
@@ -173,10 +174,10 @@ class LinearModel:
         else:
             print("Solved")
 
-        self.x = np.array([0] * len(self.c), dtype=float)
+        self.x = np.array([0] * len(tableau[0, 2:]), dtype=float)
         # save coefficients
         for key in range(1, (len(tableau))):
-            if tableau[key, 0] < len(self.c):
+            if tableau[key, 0] < len(tableau[0, 2:]):
                 self.x[int(tableau[key, 0])] = tableau[key, 1]
 
         self.optimalValue = -1 * tableau[0, 1]
@@ -193,11 +194,11 @@ def main():
     c = np.array([2, -3, 0, -5])
 
     # Restrictions a,b,c, that are from 1*1*abc
-    # A = np.array([[-1, 1, -1, -1],
-    #               [2, 4, 0, 0],
-    #               [0, 0, 1, 1]])
-    # b = np.array([0, 3, 9])
-    # c = np.array([2, -3, 0, -5])
+    A = np.array([[3, 1, -1, -1],
+                  [-2, 4, 0, 0],
+                  [0, 0, 1, 1]])
+    b = np.array([4, 3, 9])
+    c = np.array([-2, -3, 0, -5])
 
     model1.addA(A)
     model1.addB(b)
